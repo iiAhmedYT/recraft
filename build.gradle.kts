@@ -48,7 +48,7 @@ publishing {
         create<MavenPublication>("recraft") {
             from(components["java"])
 
-            artifactId = "Recraft"
+            artifactId = "recraft"
             groupId = project.group.toString()
             version = project.version.toString()
 
