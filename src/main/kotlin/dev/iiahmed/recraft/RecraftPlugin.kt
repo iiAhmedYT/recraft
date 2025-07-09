@@ -67,6 +67,11 @@ abstract class RecraftPlugin : Plugin<Project> {
                 url = project.uri("https://repo.codemc.org/repository/nms/")
             }
 
+            project.repositories.maven {
+                name = "Minecraft Libraries"
+                url = project.uri("https://libraries.minecraft.net/")
+            }
+
             project.dependencies.add(
                 "compileOnly",
                 "org.spigotmc:spigot:${version.get()}-R0.1-SNAPSHOT:remapped-mojang"
