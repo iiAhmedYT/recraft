@@ -31,7 +31,6 @@ kotlin {
 }
 
 gradlePlugin {
-    isAutomatedPublishing = false
     plugins {
         create("recraftPlugin") {
             id = "dev.iiahmed.recraft"
@@ -44,42 +43,6 @@ gradlePlugin {
 }
 
 publishing {
-    publications {
-        create<MavenPublication>("recraft") {
-            from(components["java"])
-
-            artifactId = "recraft"
-            groupId = project.group.toString()
-            version = project.version.toString()
-
-            pom {
-                name.set("Recraft Plugin")
-                description.set("A Gradle plugin for remapping Minecraft NMS plugins to Spigot and Paper and combining.")
-                url.set("https://github.com/iiAhmedYT/Recraft")
-
-                licenses {
-                    license {
-                        name.set("MIT License")
-                        url.set("https://opensource.org/licenses/MIT")
-                    }
-                }
-
-                developers {
-                    developer {
-                        id.set("iiAhmedYT")
-                        name.set("Ahmed Waleed")
-                    }
-                }
-
-                scm {
-                    connection.set("scm:git:git://github.com/iiAhmedYT/recraft.git")
-                    developerConnection.set("scm:git:ssh://github.com:iiAhmedYT/recraft.git")
-                    url.set("https://github.com/iiAhmedYT/Recraft")
-                }
-            }
-        }
-    }
-
     repositories {
         maven {
             name = "GraveMC"
