@@ -4,6 +4,7 @@ import dev.iiahmed.recraft.util.ClassPrefixer
 import dev.iiahmed.recraft.util.JarMerger
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -30,6 +31,9 @@ abstract class MergeJars @Inject constructor() : DefaultTask() {
     @get:OutputFile
     abstract val outputJar: RegularFileProperty
 
+    @get:Input
+    abstract val targetedPackages: ListProperty<String>
+
     init {
         group = "recraft"
         description = "Prefix and merge Spigot and Paper jars."
@@ -48,10 +52,10 @@ abstract class MergeJars @Inject constructor() : DefaultTask() {
         val paperPrefixedJar = File(tempDir, "paper-prefixed.jar")
 
         logger.lifecycle("Prefixing Spigot JAR classes with '${spigotPrefix.get()}'...")
-        ClassPrefixer.prefix(spigotJar, spigotPrefixedJar, spigotPrefix.get())
+        ClassPrefixer.prefix(spigotJar, spigotPrefixedJar, spigotPrefix.get(), targetedPackages.get())
 
         logger.lifecycle("Prefixing Paper JAR classes with '${paperPrefix.get()}'...")
-        ClassPrefixer.prefix(paperJar, paperPrefixedJar, paperPrefix.get())
+        ClassPrefixer.prefix(paperJar, paperPrefixedJar, paperPrefix.get(), targetedPackages.get())
 
         logger.lifecycle("Merging prefixed JARs into ${output.absolutePath}...")
         if (output.exists()) {

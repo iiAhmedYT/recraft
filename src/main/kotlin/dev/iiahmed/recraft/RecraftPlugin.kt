@@ -48,6 +48,7 @@ abstract class RecraftPlugin : Plugin<Project> {
             minecraftVersion.set(extension.minecraftVersion)
             paperPrefix.set(extension.paperPrefix)
             spigotPrefix.set(extension.spigotPrefix)
+            targetedPackages.set(extension.targetedPackages)
 
             inputSpigotJar.set(project.layout.buildDirectory.file("libs/${project.name}-spigot.jar"))
             inputPaperJar.set(project.layout.buildDirectory.file("libs/${project.name}-paper.jar"))

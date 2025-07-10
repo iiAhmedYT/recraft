@@ -30,9 +30,15 @@ recraft {
     // Set The Minecraft version you are targeting
     minecraftVersion.set("1.20.4")
 
+    // List of packages to include for prefixing/relocation
+    targetedPackages.set(listOf(
+        "dev/iiahmed/disguise/vs",
+        "org/some/dependency"
+    ))
+
     // OPTIONAL:
     // The prefix to use for the remapped classes
-    paperPrefix.set("S")
+    paperPrefix.set("P")
     spigotPrefix.set("S")
 
     // Set the pattern for the jar file (starting from the `build` directory)

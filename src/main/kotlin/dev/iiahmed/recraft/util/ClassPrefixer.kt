@@ -1,9 +1,9 @@
 package dev.iiahmed.recraft.util
 
 import org.objectweb.asm.ClassReader
-import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
-import org.objectweb.asm.Opcodes
+import org.objectweb.asm.commons.ClassRemapper
+import org.objectweb.asm.commons.Remapper
 import java.io.File
 import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
@@ -11,7 +11,7 @@ import java.util.zip.ZipEntry
 
 object ClassPrefixer {
 
-    fun prefix(inputJar: File, outputJar: File, prefix: String) {
+    fun prefix(inputJar: File, outputJar: File, prefix: String, targetedPackages: List<String>) {
         require(inputJar.exists()) { "Input JAR does not exist: ${inputJar.absolutePath}" }
         outputJar.parentFile?.mkdirs()
 
@@ -29,10 +29,21 @@ object ClassPrefixer {
 
                     if (entry.name.endsWith(".class")) {
                         val classBytes = jar.getInputStream(entry).readAllBytes()
-                        val (newName, newBytes) = renameClassOnly(classBytes, prefix)
-                        jos.putNextEntry(ZipEntry("$newName.class"))
-                        jos.write(newBytes)
-                        jos.closeEntry()
+                        val reader = ClassReader(classBytes)
+                        val internalName = reader.className
+
+                        val shouldPrefix = targetedPackages.any { internalName.startsWith(it) }
+
+                        if (shouldPrefix) {
+                            val (newName, newBytes) = renameClassFully(classBytes, prefix, targetedPackages)
+                            jos.putNextEntry(ZipEntry("$newName.class"))
+                            jos.write(newBytes)
+                            jos.closeEntry()
+                        } else {
+                            jos.putNextEntry(ZipEntry(entry.name))
+                            jos.write(classBytes)
+                            jos.closeEntry()
+                        }
                     } else {
                         jos.putNextEntry(ZipEntry(entry.name))
                         jar.getInputStream(entry).copyTo(jos)
@@ -43,30 +54,36 @@ object ClassPrefixer {
         }
     }
 
-    private fun renameClassOnly(classBytes: ByteArray, prefix: String): Pair<String, ByteArray> {
+    private fun renameClassFully(
+        classBytes: ByteArray,
+        prefix: String,
+        targetedPackages: List<String>
+    ): Pair<String, ByteArray> {
         val reader = ClassReader(classBytes)
         val writer = ClassWriter(0)
-
-        var newName: String? = null
-
-        val visitor = object : ClassVisitor(Opcodes.ASM9, writer) {
-            override fun visit(
-                version: Int,
-                access: Int,
-                name: String,
-                signature: String?,
-                superName: String?,
-                interfaces: Array<out String>?
-            ) {
-                val simpleName = name.substringAfterLast('/')
-                val packagePath = name.substringBeforeLast('/', missingDelimiterValue = "")
-                newName = if (packagePath.isNotEmpty()) "$packagePath/$prefix$simpleName" else "$prefix$simpleName"
-                super.visit(version, access, newName, signature, superName, interfaces)
-            }
-        }
-
+        val remapper = PrefixingRemapper(prefix, targetedPackages)
+        val visitor = ClassRemapper(writer, remapper)
         reader.accept(visitor, 0)
-        return newName!! to writer.toByteArray()
+
+        val newName = remapper.map(reader.className)
+        return newName to writer.toByteArray()
     }
 
+    private class PrefixingRemapper(
+        private val prefix: String,
+        private val targetedPackages: List<String>
+    ) : Remapper() {
+
+        override fun map(internalName: String): String {
+            return if (shouldPrefix(internalName)) {
+                val simpleName = internalName.substringAfterLast('/')
+                val packagePath = internalName.substringBeforeLast('/', missingDelimiterValue = "")
+                if (packagePath.isNotEmpty()) "$packagePath/$prefix$simpleName" else "$prefix$simpleName"
+            } else internalName
+        }
+
+        private fun shouldPrefix(name: String): Boolean {
+            return targetedPackages.any { name.startsWith(it) }
+        }
+    }
 }
