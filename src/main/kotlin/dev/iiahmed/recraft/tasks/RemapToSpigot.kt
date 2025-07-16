@@ -77,7 +77,7 @@ abstract class RemapToSpigot @Inject constructor() : DefaultTask() {
             throw RuntimeException("SpecialSource remapping failed", e)
         }
 
-        logger.lifecycle("Remapping ${input.name} to Spigot mappings...")
+        logger.lifecycle("Remapping ${obfOutput.name} to Spigot mappings...")
         val spigotArgs = listOf(
             "--in-jar", obfOutput.absolutePath,
             "--out-jar", output.absolutePath,
