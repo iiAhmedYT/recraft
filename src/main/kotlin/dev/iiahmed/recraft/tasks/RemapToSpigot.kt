@@ -1,8 +1,14 @@
 package dev.iiahmed.recraft.tasks
 
 import dev.iiahmed.recraft.util.MappingFetcher
+import net.md_5.specialsource.Jar
+import net.md_5.specialsource.JarMapping
+import net.md_5.specialsource.JarRemapper
 import net.md_5.specialsource.SpecialSource
+import net.md_5.specialsource.provider.JarProvider
+import net.md_5.specialsource.provider.JointProvider
 import org.gradle.api.DefaultTask
+import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -11,6 +17,7 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import java.io.File
 import javax.inject.Inject
 
 abstract class RemapToSpigot @Inject constructor() : DefaultTask() {
@@ -36,6 +43,7 @@ abstract class RemapToSpigot @Inject constructor() : DefaultTask() {
     fun remap() {
         val input = inputJar.get().asFile
         val output = outputJar.get().asFile
+        val (mojangJar, obfJar) = resolveInheritanceJars(project, minecraftVersion.get())
         val obfOutput = output.resolveSibling("${input.nameWithoutExtension}-obf.jar")
 
         if (!input.exists()) throw IllegalStateException("Input JAR not found: ${input.absolutePath}")
@@ -62,16 +70,14 @@ abstract class RemapToSpigot @Inject constructor() : DefaultTask() {
             throw IllegalStateException("Spigot mappings not found: ${spigotMappings.absolutePath}")
         }
 
-        val obfArgs = listOf(
-            "--in-jar", input.absolutePath,
-            "--out-jar", obfOutput.absolutePath,
-            "--srg-in", obfMappings.absolutePath,
-            "--reverse",
-            "--quiet"
-        )
-
         try {
-            SpecialSource.main(obfArgs.toTypedArray())
+            this.remapJarWithInheritance(
+                inputJar = input,
+                outputJar = obfOutput,
+                mappingFile = obfMappings,
+                inheritanceJar = mojangJar,
+                reversed = true
+            )
             logger.lifecycle("Remapped JAR written to: ${output.absolutePath}")
         } catch (e: Exception) {
             throw RuntimeException("SpecialSource remapping failed", e)
@@ -82,15 +88,66 @@ abstract class RemapToSpigot @Inject constructor() : DefaultTask() {
             "--in-jar", obfOutput.absolutePath,
             "--out-jar", output.absolutePath,
             "--srg-in", spigotMappings.absolutePath,
+            "--h", obfJar.absolutePath,
             "--quiet"
         )
 
         try {
-            SpecialSource.main(spigotArgs.toTypedArray())
+            this.remapJarWithInheritance(
+                inputJar = obfOutput,
+                outputJar = output,
+                mappingFile = spigotMappings,
+                inheritanceJar = obfJar,
+                reversed = false
+            )
             logger.lifecycle("Remapped JAR written to: ${output.absolutePath}")
         } catch (e: Exception) {
             throw RuntimeException("SpecialSource remapping failed", e)
         }
     }
+
+    private fun resolveInheritanceJars(project: Project, version: String): Pair<File, File> {
+        val deps = project.dependencies
+
+        val remappedMojangJar = project.configurations.detachedConfiguration(
+            deps.create("org.spigotmc:spigot:$version-R0.1-SNAPSHOT:remapped-mojang")
+        ).apply {
+            isTransitive = false
+        }.singleFile
+
+        val obfuscatedJar = project.configurations.detachedConfiguration(
+            deps.create("org.spigotmc:spigot:$version-R0.1-SNAPSHOT")
+        ).apply {
+            isTransitive = false
+        }.singleFile
+
+        return remappedMojangJar to obfuscatedJar
+    }
+
+    private fun remapJarWithInheritance(
+        inputJar: File,
+        outputJar: File,
+        mappingFile: File,
+        inheritanceJar: File,
+        reversed: Boolean = true
+    ) {
+        Jar.init(inputJar).use { input ->
+            Jar.init(inheritanceJar).use { inheritance ->
+                val mapping = JarMapping().apply {
+                    loadMappings(mappingFile.canonicalPath, reversed, false, null, null)
+
+                    val provider = JointProvider().apply {
+                        add(JarProvider(input))
+                        add(JarProvider(inheritance))
+                    }
+                    setFallbackInheritanceProvider(provider)
+                }
+
+                val remapper = JarRemapper(mapping)
+                remapper.remapJar(input, outputJar)
+            }
+        }
+    }
+
 
 }
