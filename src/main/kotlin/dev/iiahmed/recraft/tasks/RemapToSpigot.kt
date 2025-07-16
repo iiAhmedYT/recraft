@@ -52,7 +52,7 @@ abstract class RemapToSpigot @Inject constructor() : DefaultTask() {
         )
 
         logger.lifecycle("Remapping ${input.name} to Obf mappings...")
-        val obfMappings = mappingsDir.resolve("obf-mappings.csrg")
+        val obfMappings = mappingsDir.resolve("mojang-mappings.txt")
         val spigotMappings = mappingsDir.resolve("spigot-mappings.csrg")
         if (!obfMappings.exists()) {
             throw IllegalStateException("Obfuscated mappings not found: ${obfMappings.absolutePath}")
@@ -66,7 +66,6 @@ abstract class RemapToSpigot @Inject constructor() : DefaultTask() {
             "--in-jar", input.absolutePath,
             "--out-jar", obfOutput.absolutePath,
             "--srg-in", obfMappings.absolutePath,
-            "--kill-source",
             "--reverse",
             "--quiet"
         )
@@ -83,7 +82,6 @@ abstract class RemapToSpigot @Inject constructor() : DefaultTask() {
             "--in-jar", obfOutput.absolutePath,
             "--out-jar", output.absolutePath,
             "--srg-in", spigotMappings.absolutePath,
-            "--kill-source",
             "--quiet"
         )
 

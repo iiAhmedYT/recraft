@@ -77,7 +77,7 @@ object MappingFetcher {
         val versionHash = versionToHash[minecraftVersion]
             ?: error("Unsupported Minecraft version: $minecraftVersion. Supported versions: ${versionToHash.keys.joinToString(", ")}")
         val obfMappingsUrl = String.format(MOJANG_BASE_URL, versionHash)
-        val obfMappingsFile = outputDir.resolve("obf-mappings.csrg")
+        val obfMappingsFile = outputDir.resolve("mojang-mappings.txt")
         if (!obfMappingsFile.exists()) {
             downloadRawFileToDisk(obfMappingsUrl, obfMappingsFile)
         } else {

@@ -60,10 +60,10 @@ object ClassPrefixer {
         targetedPackages: List<String>
     ): Pair<String, ByteArray> {
         val reader = ClassReader(classBytes)
-        val writer = ClassWriter(0)
+        val writer = ClassWriter(ClassWriter.COMPUTE_FRAMES or ClassWriter.COMPUTE_MAXS)
         val remapper = PrefixingRemapper(prefix, targetedPackages)
         val visitor = ClassRemapper(writer, remapper)
-        reader.accept(visitor, 0)
+        reader.accept(visitor, ClassReader.EXPAND_FRAMES)
 
         val newName = remapper.map(reader.className)
         return newName to writer.toByteArray()
