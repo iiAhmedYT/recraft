@@ -83,14 +83,6 @@ abstract class RemapToSpigot @Inject constructor() : DefaultTask() {
         }
 
         logger.lifecycle("Remapping ${obfOutput.name} to Spigot mappings...")
-        val spigotArgs = listOf(
-            "--in-jar", obfOutput.absolutePath,
-            "--out-jar", output.absolutePath,
-            "--srg-in", spigotMappings.absolutePath,
-            "--h", obfJar.absolutePath,
-            "--quiet"
-        )
-
         try {
             this.remapJarWithInheritance(
                 inputJar = obfOutput,
