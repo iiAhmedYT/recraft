@@ -4,7 +4,6 @@ import dev.iiahmed.recraft.util.MappingFetcher
 import net.md_5.specialsource.Jar
 import net.md_5.specialsource.JarMapping
 import net.md_5.specialsource.JarRemapper
-import net.md_5.specialsource.SpecialSource
 import net.md_5.specialsource.provider.JarProvider
 import net.md_5.specialsource.provider.JointProvider
 import org.gradle.api.DefaultTask
