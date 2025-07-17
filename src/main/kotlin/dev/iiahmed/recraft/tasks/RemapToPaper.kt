@@ -109,7 +109,7 @@ abstract class RemapToPaper @Inject constructor() : DefaultTask() {
             descriptor: String?,
             signature: String?,
             exceptions: Array<out String>?
-        ): MethodVisitor? {
+        ): MethodVisitor {
             val remappedDesc = remapMethodDesc(descriptor)
             val remappedSignature = signature?.let { remapSignature(it) }
             val remappedExceptions = exceptions?.map { remapName(it) }?.toTypedArray()
