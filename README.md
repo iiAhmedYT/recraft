@@ -18,7 +18,7 @@ pluginManagement {
 and then add this to your plugins block:
 ```kt
 plugins {
-    id("dev.iiahmed.recraft") version "1.0.0"
+    id("dev.iiahmed.recraft") version "1.0.2"
 }
 ```
 
@@ -46,7 +46,7 @@ recraft {
 }
 ```
 ## Supported Versions
-The plugin supports Minecraft versions from 1.17.1 to 1.21.7, and it will automatically download the necessary mappings for you.
+The plugin supports Minecraft versions from 1.17.1 to 1.21.10, and it will automatically download the necessary mappings for you.
 
 To add support for a new version, it's not as complicated.
 You need to add the mappings to the `util/MappingFetcher` object, and then update 2 maps.
