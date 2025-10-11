@@ -16,7 +16,7 @@ abstract class MultiRelease @Inject constructor() : DefaultTask() {
     abstract val jarFile: RegularFileProperty
 
     @get:Input
-    abstract var baselineMajor: Property<Int>
+    abstract val baselineMajor: Property<Int>
 
     @TaskAction
     fun run() {
