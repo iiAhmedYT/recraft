@@ -8,6 +8,7 @@ import javax.inject.Inject
 abstract class RecraftExtention @Inject constructor(objects: ObjectFactory) {
 
     val minecraftVersion: Property<String> = objects.property(String::class.java)
+    val baselineMajor: Property<Int> = objects.property(Int::class.java).convention(52) // Java 8 default
 
     val jarFilePattern: Property<String> = objects.property(String::class.java)
     val paperPrefix: Property<String> = objects.property(String::class.java).convention("P")

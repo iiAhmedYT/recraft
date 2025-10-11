@@ -1,6 +1,7 @@
 package dev.iiahmed.recraft
 
 import dev.iiahmed.recraft.tasks.MergeJars
+import dev.iiahmed.recraft.tasks.MultiRelease
 import dev.iiahmed.recraft.tasks.RemapToPaper
 import dev.iiahmed.recraft.tasks.RemapToSpigot
 import org.gradle.api.Plugin
@@ -16,7 +17,7 @@ abstract class RecraftPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val extension = project.extensions.create("recraft", RecraftExtention::class.java)
 
-        project.tasks.register("remapToSpigot", RemapToSpigot::class.java) {
+        val remapToSpigot = project.tasks.register("remapToSpigot", RemapToSpigot::class.java) {
             dependsOn("jar")
             minecraftVersion.set(extension.minecraftVersion)
 
@@ -33,7 +34,7 @@ abstract class RecraftPlugin : Plugin<Project> {
             mappingsFolder.set(mappingFolder)
         }
 
-        project.tasks.register("remapToPaper", RemapToPaper::class.java) {
+        val remapToPaper = project.tasks.register("remapToPaper", RemapToPaper::class.java) {
             dependsOn("jar")
             minecraftVersion.set(extension.minecraftVersion)
 
@@ -44,15 +45,21 @@ abstract class RecraftPlugin : Plugin<Project> {
         }
 
         val mergeBothJars = project.tasks.register("mergeBothJars", MergeJars::class.java) {
-            dependsOn("remapToSpigot", "remapToPaper")
+            dependsOn(remapToSpigot, remapToPaper)
             minecraftVersion.set(extension.minecraftVersion)
             paperPrefix.set(extension.paperPrefix)
             spigotPrefix.set(extension.spigotPrefix)
             targetedPackages.set(extension.targetedPackages)
 
-            inputSpigotJar.set(project.layout.buildDirectory.file("libs/${project.name}-spigot.jar"))
-            inputPaperJar.set(project.layout.buildDirectory.file("libs/${project.name}-paper.jar"))
+            inputSpigotJar.set(remapToSpigot.flatMap { it.outputJar })
+            inputPaperJar.set(remapToPaper.flatMap { it.outputJar })
             outputJar.set(project.layout.buildDirectory.file("libs/${project.name}-merged.jar"))
+        }
+
+        val markMultiRelease = project.tasks.register("markMultiRelease", MultiRelease::class.java) {
+            dependsOn(mergeBothJars)
+            baselineMajor.set(extension.baselineMajor)
+            jarFile.set(mergeBothJars.flatMap { it.outputJar })
         }
 
         project.afterEvaluate {
@@ -84,12 +91,12 @@ abstract class RecraftPlugin : Plugin<Project> {
             }
             project.artifacts.add("recraft", mergeBothJars.flatMap { it.outputJar }) {
                 type = "jar"
-                builtBy(mergeBothJars)
+                builtBy(markMultiRelease)
             }
         }
 
         project.tasks.named("build") {
-            dependsOn("mergeBothJars")
+            dependsOn(markMultiRelease)
         }
     }
 
