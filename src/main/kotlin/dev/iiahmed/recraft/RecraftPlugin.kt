@@ -1,7 +1,6 @@
 package dev.iiahmed.recraft
 
 import dev.iiahmed.recraft.tasks.MergeJars
-import dev.iiahmed.recraft.tasks.MultiRelease
 import dev.iiahmed.recraft.tasks.RemapToPaper
 import dev.iiahmed.recraft.tasks.RemapToSpigot
 import org.gradle.api.Plugin
@@ -56,11 +55,12 @@ abstract class RecraftPlugin : Plugin<Project> {
             outputJar.set(project.layout.buildDirectory.file("libs/${project.name}-merged.jar"))
         }
 
+        /* Disable for now, as multi-release jars are not ideal.
         val markMultiRelease = project.tasks.register("markMultiRelease", MultiRelease::class.java) {
             dependsOn(mergeBothJars)
             baselineMajor.set(extension.baselineMajor)
             jarFile.set(mergeBothJars.flatMap { it.outputJar })
-        }
+        } */
 
         project.afterEvaluate {
             val version = extension.minecraftVersion
@@ -91,12 +91,12 @@ abstract class RecraftPlugin : Plugin<Project> {
             }
             project.artifacts.add("recraft", mergeBothJars.flatMap { it.outputJar }) {
                 type = "jar"
-                builtBy(markMultiRelease)
+                builtBy(mergeBothJars)
             }
         }
 
         project.tasks.named("build") {
-            dependsOn(markMultiRelease)
+            dependsOn(mergeBothJars)
         }
     }
 
