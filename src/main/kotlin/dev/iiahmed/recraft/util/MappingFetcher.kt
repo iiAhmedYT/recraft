@@ -7,6 +7,7 @@ object MappingFetcher {
 
     private const val MOJANG_BASE_URL = "https://piston-data.mojang.com/v1/objects/%s/server.txt"
     private val versionToHash = mapOf(
+        "1.21.11" to "5621e9253f05fd57872bbe7f8ddf5f9a7d525955",
         "1.21.10" to "c5440743411a6fd7490fa18a4b6c5d8edf36d88b",
         "1.21.9" to "587e016fe8a876cbc1cc98d73f9d0d79bfb32b2c",
         "1.21.8" to "eb1e1eb47cb740012fc82eacc394859463684132",
@@ -39,6 +40,7 @@ object MappingFetcher {
 
     private const val SPIGOT_BASE_URL = "https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings"
     private val versionToCommit = mapOf(
+        "1.21.11" to "6975b4b974bb5a8610c6a3ef597af0ce58a6b215",
         "1.21.10" to "6cf716da198f9d94f9c36e36d9be6417c5c24824",
         "1.21.9" to "42d18d4c4653ffc549778dbe223f6994a031d69e",
         "1.21.8" to "62f9b85b300b6bbf1c559e379567699a6e281cec",
