@@ -61,7 +61,7 @@ The url should look like this: `https://piston-data.mojang.com/v1/objects/<hash>
 Just get the hash and add it to the map along with the version you want to add.
 
 #### Spigot Mappings
-The second map is the `versionToCommit` map, you can get the hash by visiting the [SpigotMC Versions](https://hub.spigotmc.org/stash/projects/SPIGOT/repos/craftbukkit/commits) page,
+The second map is the `versionToCommit` map, you can get the hash by visiting the [SpigotMC Versions](https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/commits) page,
 and find a commit that matches the version you want to add. after you find the commit, just copy the hash and add it to the map along with the version you want to add.
 
 ## License

@@ -40,7 +40,7 @@ object MappingFetcher {
 
     private const val SPIGOT_BASE_URL = "https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings"
     private val versionToCommit = mapOf(
-        "1.21.11" to "6975b4b974bb5a8610c6a3ef597af0ce58a6b215",
+        "1.21.11" to "17f77cee7117ab9d6175f088ae8962bfd04e61a9",
         "1.21.10" to "6cf716da198f9d94f9c36e36d9be6417c5c24824",
         "1.21.9" to "42d18d4c4653ffc549778dbe223f6994a031d69e",
         "1.21.8" to "62f9b85b300b6bbf1c559e379567699a6e281cec",
