@@ -44,23 +44,22 @@ abstract class RecraftPlugin : Plugin<Project> {
         }
 
         val mergeBothJars = project.tasks.register("mergeBothJars", MergeJars::class.java) {
-            dependsOn(remapToSpigot, remapToPaper)
+            dependsOn(remapToSpigot)
             minecraftVersion.set(extension.minecraftVersion)
+            shouldRemapToPaper.set(extension.remapToPaper)
             paperPrefix.set(extension.paperPrefix)
             spigotPrefix.set(extension.spigotPrefix)
             targetedPackages.set(extension.targetedPackages)
 
             inputSpigotJar.set(remapToSpigot.flatMap { it.outputJar })
-            inputPaperJar.set(remapToPaper.flatMap { it.outputJar })
             outputJar.set(project.layout.buildDirectory.file("libs/${project.name}-merged.jar"))
-        }
 
-        /* Disable for now, as multi-release jars are not ideal.
-        val markMultiRelease = project.tasks.register("markMultiRelease", MultiRelease::class.java) {
-            dependsOn(mergeBothJars)
-            baselineMajor.set(extension.baselineMajor)
-            jarFile.set(mergeBothJars.flatMap { it.outputJar })
-        } */
+            // Only depend on remapToPaper if enabled
+            if (extension.remapToPaper.get()) {
+                dependsOn(remapToPaper)
+                inputPaperJar.set(remapToPaper.flatMap { it.outputJar })
+            }
+        }
 
         project.afterEvaluate {
             val version = extension.minecraftVersion

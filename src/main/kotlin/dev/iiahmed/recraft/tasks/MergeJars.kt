@@ -8,6 +8,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
@@ -19,12 +20,17 @@ abstract class MergeJars @Inject constructor() : DefaultTask() {
     abstract val minecraftVersion: Property<String>
 
     @get:Input
+    abstract val shouldRemapToPaper: Property<Boolean>
+
+    @get:Input
     abstract val paperPrefix: Property<String>
     @get:Input
     abstract val spigotPrefix: Property<String>
 
     @get:InputFile
     abstract val inputSpigotJar: RegularFileProperty
+
+    @get:Optional
     @get:InputFile
     abstract val inputPaperJar: RegularFileProperty
 
@@ -41,9 +47,17 @@ abstract class MergeJars @Inject constructor() : DefaultTask() {
 
     @TaskAction
     fun merge() {
-        val spigotJar = inputSpigotJar.get().asFile
-        val paperJar = inputPaperJar.get().asFile
         val output = outputJar.get().asFile
+        val spigotJar = inputSpigotJar.get().asFile
+
+        if (!shouldRemapToPaper.get()) {
+            logger.lifecycle("Paper remapping is disabled; copying Spigot JAR to output...")
+            spigotJar.copyTo(output, overwrite = true)
+            logger.lifecycle("Copy completed!")
+            return
+        }
+
+        val paperJar = inputPaperJar.get().asFile
 
         val tempDir = project.layout.buildDirectory.dir("recraft/tmp/${minecraftVersion.get()}").get().asFile
         if (!tempDir.exists()) tempDir.mkdirs()
