@@ -28,7 +28,9 @@ abstract class RecraftPlugin : Plugin<Project> {
             outputJar.set(project.layout.buildDirectory.file("libs/${project.name}-spigot.jar"))
 
             val mappingFolder = project.layout.projectDirectory.dir("mappings/${extension.minecraftVersion.get()}/")
-            if (!mappingFolder.asFile.exists()) {
+            // New scheme (26.1+) never runs this task, so don't create a mappings
+            // folder for it (this block realizes on IDE sync / `gradle tasks` too).
+            if (!VersionScheme.isMojangOnly(extension.minecraftVersion.get()) && !mappingFolder.asFile.exists()) {
                 mappingFolder.asFile.mkdirs()
             }
 
