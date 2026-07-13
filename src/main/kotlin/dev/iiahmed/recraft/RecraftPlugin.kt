@@ -3,8 +3,10 @@ package dev.iiahmed.recraft
 import dev.iiahmed.recraft.tasks.MergeJars
 import dev.iiahmed.recraft.tasks.RemapToPaper
 import dev.iiahmed.recraft.tasks.RemapToSpigot
+import dev.iiahmed.recraft.util.VersionScheme
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.Copy
 
 abstract class RecraftPlugin : Plugin<Project> {
 
@@ -61,6 +63,17 @@ abstract class RecraftPlugin : Plugin<Project> {
             }
         }
 
+        // Passthrough used by the new (26.1+) scheme: the plain jar already works
+        // everywhere, so just copy it to the merged output name for consistency.
+        val recraftPassthrough = project.tasks.register("recraftPassthrough", Copy::class.java) {
+            dependsOn("jar")
+
+            val inputFileLocation = extension.jarFilePattern.getOrElse("libs/${project.name}.jar")
+            from(project.layout.buildDirectory.file(inputFileLocation))
+            into(project.layout.buildDirectory.dir("libs"))
+            rename { "${project.name}-merged.jar" }
+        }
+
         project.afterEvaluate {
             val version = extension.minecraftVersion
 
@@ -79,23 +92,47 @@ abstract class RecraftPlugin : Plugin<Project> {
                 url = project.uri("https://libraries.minecraft.net/")
             }
 
+            val newScheme = VersionScheme.isMojangOnly(version.get())
+
+            // 26.1+ ships Mojang-mapped by default, so the `remapped-mojang`
+            // classifier is obsolete — use the default artifact.
             project.dependencies.add(
                 "compileOnly",
-                "org.spigotmc:spigot:${version.get()}-R0.1-SNAPSHOT:remapped-mojang"
+                if (newScheme) "org.spigotmc:spigot:${version.get()}-R0.1-SNAPSHOT"
+                else "org.spigotmc:spigot:${version.get()}-R0.1-SNAPSHOT:remapped-mojang"
             )
 
             project.configurations.create("recraft") {
                 isCanBeConsumed = true
                 isCanBeResolved = false
             }
-            project.artifacts.add("recraft", mergeBothJars.flatMap { it.outputJar }) {
-                type = "jar"
-                builtBy(mergeBothJars)
-            }
-        }
 
-        project.tasks.named("build") {
-            dependsOn(mergeBothJars)
+            if (newScheme) {
+                project.logger.lifecycle(
+                    "Recraft: MC ${version.get()} is Mojang-mapped by default; " +
+                        "skipping Spigot remap and CraftBukkit unrelocation."
+                )
+                // A Copy task has no single-file output provider, so point the
+                // artifact at the known output path, built by the copy task.
+                project.artifacts.add(
+                    "recraft",
+                    project.layout.buildDirectory.file("libs/${project.name}-merged.jar")
+                ) {
+                    type = "jar"
+                    builtBy(recraftPassthrough)
+                }
+                project.tasks.named("build") {
+                    dependsOn(recraftPassthrough)
+                }
+            } else {
+                project.artifacts.add("recraft", mergeBothJars.flatMap { it.outputJar }) {
+                    type = "jar"
+                    builtBy(mergeBothJars)
+                }
+                project.tasks.named("build") {
+                    dependsOn(mergeBothJars)
+                }
+            }
         }
     }
 
